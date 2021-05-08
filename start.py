@@ -12,18 +12,22 @@ def parseATagsAndReturnHrefAttrFrom(html):
     return hrefs
 
 def printHeadersForUrl(url, printHeaders):
-    output = url
+    output = url    
     innerUrl = openUrl(url)
-    for printHeader in printHeaders:
-        header = innerUrl.headers[printHeader]
-        if(header != None):
-            output +=  "\t" + header
+    if(innerUrl != None):
+        output +=  "\t" + str(innerUrl.status)
+        for printHeader in printHeaders:
+            header = innerUrl.headers[printHeader]        
+            if(header != None):
+                output +=  "\t" + header
     print(output)
         
 
 def getHtmlFrom(url):
-    url = openUrl(url)    
-    return url.read()
+    url = openUrl(url)
+    if(url != None):    
+        return url.read()
+    return ""
 
 def openUrl(url):    
     try:
@@ -32,6 +36,8 @@ def openUrl(url):
     except urllib.error.HTTPError as e:
         # "e" can be treated as a http.client.HTTPResponse object
         return e
+    except Exception as e:
+        return None
 
 headers = ["cache-control", "via", "x-cache"]
 html = getHtmlFrom(sys.argv[1])
