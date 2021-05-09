@@ -62,10 +62,10 @@ class HttpUtil:
 
 
 class ParseValuesOrReturnDefaultValues:
-    def __init__(self, defaultHttpHeaders, defaultNrOfTimes):
+    def __init__(self, defaultHttpHeaders, defaultTimes):
         self.url = None
         self.httpHeaders = defaultHttpHeaders
-        self.nrOfTimes = range(defaultNrOfTimes)
+        self.times = range(defaultTimes)
 
         argv = sys.argv[1:]
 
@@ -77,7 +77,7 @@ class ParseValuesOrReturnDefaultValues:
             if opt in ['-u']:
                 self.url = arg
             elif opt in ['-t']:
-                self.nrOfTimes = range(int(arg))
+                self.times = range(int(arg))
             elif opt in ['-h']:
                 self.httpHeaders = arg.split(',')
 
@@ -87,26 +87,35 @@ class ParseValuesOrReturnDefaultValues:
     def gethttpHeaders(self):
         return self.httpHeaders
 
-    def getNrOfTimes(self):
-        return self.nrOfTimes
+    def getTimes(self):
+        return self.times
+
+    def getTimesStr(self):
+        return str(len(self.times))
+
+    def gethttpHeadersStr(self):
+        return str(self.httpHeaders)
 
 
 def main():
-
+    scriptName = sys.argv[0]
     values = ParseValuesOrReturnDefaultValues(
         ["cache-control", "via", "x-cache"], 1)
 
     if(values.getUrl() is None):
-        print("Usage python " + sys.argv[0] + " -u https://www.plweb.se/")
+        print(
+            "Usage python {0} -u https://github.com/plwebse/".format(scriptName))
         return
 
-    print("Checking headers " + str(values.gethttpHeaders()) +
-          " for all urls in html @ url:" + values.getUrl() + " " + str(len(values.getNrOfTimes())) + " nr of times")
+    print("Checking headers {0} for all urls in html @ url:{1} {2} time(s)".format(
+        values.gethttpHeadersStr(), 
+        values.getUrl(), 
+        values.getTimesStr()))
 
     html = HttpUtil.get_html_from(values.getUrl())
     urls = ParseHtmlForAllUrlsInATagsHrefAttributes(html).getParsedUrls()
     for url in urls:
-        for _time in values.getNrOfTimes():
+        for _time in values.getTimes():
             print(HttpUtil.get_headers_for_url(url, values.gethttpHeaders()))
 
 
