@@ -1,13 +1,14 @@
 import sys
+import getopt
 import urllib.request
 from bs4 import BeautifulSoup
 
 
 def parse_all_a_tags_href_attr_values_from(html):
-    hrefs = []
+    hrefs = set()
     soup = BeautifulSoup(html, 'html.parser')
     for link in soup.find_all('a'):
-        hrefs.append(link.get('href'))
+        hrefs.add(link.get('href'))
     return hrefs
 
 
@@ -50,9 +51,40 @@ def open_url(url):
         return None
 
 
-list_http_headers = ["cache-control", "via", "x-cache"]
-html = get_html_from(sys.argv[1])
-hrefs = parse_all_a_tags_href_attr_values_from(html)
-urls = remove_url_that_dont_start_with_http(hrefs)
-for url in urls:
-    print(get_headers_for_url(url, list_http_headers))
+def main():
+    argv = sys.argv[1:]
+    url = None
+
+    # default values
+    times = range(1)
+    list_http_headers = ["cache-control", "via", "x-cache"]
+
+    try:
+        opts, _args = getopt.getopt(argv, "u:t:h:")
+    except:
+        print("-u must be an url")
+    for opt, arg in opts:
+        if opt in ['-u']:
+            url = arg
+        elif opt in ['-t']:
+            times = range(int(arg))
+        elif opt in ['-h']:
+            list_http_headers = arg.split(',')
+
+    if(url is None):
+        print("-u must be an url")        
+        return
+
+    print("Checking headers " + str(list_http_headers) +
+          " for all urls in html @ url:" + url + " " + str(len(times)) + " times")
+
+    html = get_html_from(url)
+    hrefs = parse_all_a_tags_href_attr_values_from(html)
+    urls = remove_url_that_dont_start_with_http(hrefs)
+    for url in urls:
+        for _time in times:
+            print(get_headers_for_url(url, list_http_headers))
+
+
+if __name__ == "__main__":
+    main()
