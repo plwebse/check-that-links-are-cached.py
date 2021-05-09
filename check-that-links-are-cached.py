@@ -62,7 +62,7 @@ def main():
     try:
         opts, _args = getopt.getopt(argv, "u:t:h:")
     except:
-        print("-u must be an url")
+        print("An error occured")
     for opt, arg in opts:
         if opt in ['-u']:
             url = arg
@@ -72,7 +72,7 @@ def main():
             list_http_headers = arg.split(',')
 
     if(url is None):
-        print("-u must be an url")        
+        print("Usage python " + sys.argv[0] + " -u https://www.plweb.se/")
         return
 
     print("Checking headers " + str(list_http_headers) +
