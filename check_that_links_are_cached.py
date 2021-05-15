@@ -23,7 +23,7 @@ class ParseHtmlForUrlsInATagsHrefAttributes:
                 urls.append(href)
         return urls
 
-    def getParsedUrls(self):
+    def get_parsed_urls(self):
         return self.urls
 
 
@@ -66,18 +66,21 @@ class HttpUtil:
             exit_program()
 
 
-class ParseValuesOrReturnDefaultValues:
-    def __init__(self, argv, defaultHttpHeaders, defaultTimes, defaultParseHtml):
+class ParseInputValuesOrReturnDefaultValues:
+    def __init__(self, argv, default_http_headers, default_times, default_parse_html):
         self.argv = argv
-        self.scriptName = self.argv[0]
+        self.script_name = self.argv[0]
         self.url = None
-        self.httpHeaders = defaultHttpHeaders
-        self.times = range(defaultTimes)
-        self.parseHtml = defaultParseHtml
+        self.http_headers = default_http_headers
+        self.times = range(default_times)
+        self.parse_html = default_parse_html
 
         try:
             opts, _args = getopt.getopt(
-                self.argv[1:], "u:t:h:p:", ['url=', 'times=', 'http-headers=', 'parse-html='])
+                self.argv[1:],
+                "u:t:h:p:",
+                ['url=', 'times=', 'http-headers=', 'parse-html=']
+            )
         except Exception as e:
             print("An error occured {0}".format(str(e)))
             return
@@ -87,30 +90,30 @@ class ParseValuesOrReturnDefaultValues:
             elif opt in ('-t', '--times'):
                 self.times = range(int(arg_value))
             elif opt in ('-h', '--http-headers'):
-                self.httpHeaders = [v.strip() for v in arg_value.split(',')]
+                self.http_headers = [v.strip() for v in arg_value.split(',')]
             elif opt in ('-p', '--parse-html'):
-                self.parseHtml = self.__str2bool(arg_value)
+                self.parse_html = self.__str2bool(arg_value)
 
-    def getUrl(self):
+    def get_url(self):
         return self.url
 
-    def gethttpHeaders(self):
-        return self.httpHeaders
+    def get_http_headers(self):
+        return self.http_headers
 
-    def getTimes(self):
+    def get_times(self):
         return self.times
 
-    def getTimesStr(self):
+    def get_times_str(self):
         return str(len(self.times))
 
-    def gethttpHeadersStr(self):
-        return str(self.httpHeaders)
+    def get_http_headers_str(self):
+        return str(self.http_headers)
 
-    def getParseHtml(self):
-        return self.parseHtml
+    def get_parse_html(self):
+        return self.parse_html
 
-    def getScriptName(self):
-        return self.scriptName
+    def get_script_name(self):
+        return self.script_name
 
     def __str2bool(self, v):
         return str(v).lower() in ("yes", "true", "1", "y")
@@ -120,43 +123,44 @@ def exit_program():
     sys.exit(0)
 
 
-def main():    
-    values = ParseValuesOrReturnDefaultValues(
+def main():
+    values = ParseInputValuesOrReturnDefaultValues(
         sys.argv,
         ["cache-control", "via", "x-cache"],
         1,
         True
     )
 
-    if(values.getUrl() is None):
+    if(values.get_url() is None):
         print(
-            "Usage python {0} -u https://github.com/plwebse/".format(values.getScriptName()))
+            "Usage python {0} -u https://github.com/plwebse/".format(values.get_script_name()))
         return
 
     print("Checking headers {0} for all urls in html @ url:{1} {2} time(s) parsing href values {3}".format(
-        values.gethttpHeadersStr(),
-        values.getUrl(),
-        values.getTimesStr(),
-        values.getParseHtml())
+        values.get_http_headers_str(),
+        values.get_url(),
+        values.get_times_str(),
+        values.get_parse_html())
     )
 
-    urls = [values.getUrl()]
-    if values.getParseHtml():
+    if values.get_parse_html():
         html = HttpUtil.get_html_from(
-            HttpUtil.get_http_response_from(values.getUrl()))
-        urls = ParseHtmlForUrlsInATagsHrefAttributes(html).getParsedUrls()
+            HttpUtil.get_http_response_from(values.get_url()))
+        urls = ParseHtmlForUrlsInATagsHrefAttributes(html).get_parsed_urls()
+    else:
+        urls = [values.get_url()]
 
-    tableHeader = 'url'
-    tableHeader += '\tcode'
-    for header in values.gethttpHeaders():
-        tableHeader += '\t' + header
+    table_header = 'url'
+    table_header += '\tcode'
+    for header in values.get_http_headers():
+        table_header += '\t' + header
 
-    print(tableHeader)
+    print(table_header)
     try:
         for url in urls:
-            for _time in values.getTimes():
+            for _time in values.get_times():
                 print(HttpUtil.get_headers_for_url(
-                    url, HttpUtil.get_http_response_from(url), values.gethttpHeaders()))
+                    url, HttpUtil.get_http_response_from(url), values.get_http_headers()))
     except KeyboardInterrupt:
         exit_program()
 
