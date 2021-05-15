@@ -4,7 +4,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 
-class ParseHtmlForAllUrlsInATagsHrefAttributes:
+class ParseHtmlForUrlsInATagsHrefAttributes:
     def __init__(self, html):
         self.urls = self.__remove_url_that_dont_start_with_http(
             self.__parse_all_a_tags_href_attr_values_from(html))
@@ -69,18 +69,19 @@ class ParseValuesOrReturnDefaultValues:
         argv = sys.argv[1:]
 
         try:
-            opts, _args = getopt.getopt(argv, "u:t:h:p:")
-        except:
-            print("An error occured")
+            opts, _args = getopt.getopt(
+                argv, "u:t:h:p:", ['url=', 'times=', 'http-headers=', 'parse-html='])
+        except Exception as e:
+            print("An error occured {0}".format(str(e)))            
         for opt, arg in opts:
-            if opt in ['-u']:
+            if opt in ('-u', '--url'):
                 self.url = arg
-            elif opt in ['-t']:
+            elif opt in ('-t', '--times'):
                 self.times = range(int(arg))
-            elif opt in ['-h']:
-                self.httpHeaders = arg.split(',')
-            elif opt in ['-p']:
-                self.parseHtml = self.__str2bool(arg)
+            elif opt in ('-h', '--http-headers'):
+                self.httpHeaders = [x.strip() for x in arg.split(',')]
+            elif opt in ('-p', '--parse-html'):
+                self.parseHtml = self.__str2bool(arg)        
 
     def getUrl(self):
         return self.url
@@ -123,8 +124,9 @@ def main():
 
     urls = [values.getUrl()]
     if values.getParseHtml():
-        html = HttpUtil.get_html_from(HttpUtil.get_http_response_from(values.getUrl()))
-        urls = ParseHtmlForAllUrlsInATagsHrefAttributes(html).getParsedUrls()
+        html = HttpUtil.get_html_from(
+            HttpUtil.get_http_response_from(values.getUrl()))
+        urls = ParseHtmlForUrlsInATagsHrefAttributes(html).getParsedUrls()
 
     tableHeader = 'url'
     tableHeader += '\tcode'

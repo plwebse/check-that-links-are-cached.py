@@ -1,32 +1,32 @@
 import unittest
-from check_that_links_are_cached import ParseHtmlForAllUrlsInATagsHrefAttributes, HttpUtil
+from check_that_links_are_cached import ParseHtmlForUrlsInATagsHrefAttributes, HttpUtil
 from unittest.mock import MagicMock
 
 
-class TestParseHtmlForAllUrlsInATagsHrefAttributes(unittest.TestCase):
+class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
 
     def test_empty_result(self):
         html = "test"
         exepected = []
-        actual = self.__phfauiatagsha(html).getParsedUrls()
+        actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
 
     def test_some_result(self):
         html = '<html><head></head><body><a href="https://www.plweb.se/"> </body></html>'
         exepected = ['https://www.plweb.se/']
-        actual = self.__phfauiatagsha(html).getParsedUrls()
+        actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
 
     def test_no_ancor_result(self):
         html = '<html><head></head><body><a href="https://www.plweb.se/"><a href="#test"> </body></html>'
         exepected = ['https://www.plweb.se/']
-        actual = self.__phfauiatagsha(html).getParsedUrls()
+        actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
 
     def test_no_duplicate_result(self):
         html = '<html><head></head><body><a href="https://www.plweb.se/"><a href="#test"><a href="https://www.plweb.se/"></body></html>'
         exepected = ['https://www.plweb.se/']
-        actual = self.__phfauiatagsha(html).getParsedUrls()
+        actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
 
     def test_http_util_get_no_headers_for_url(self):
@@ -55,8 +55,8 @@ class TestParseHtmlForAllUrlsInATagsHrefAttributes(unittest.TestCase):
         actual = HttpUtil.get_headers_for_url("test", http_response, ['via'])
         self.assertEqual(exepected, actual)
 
-    def __phfauiatagsha(self, html):
-        return ParseHtmlForAllUrlsInATagsHrefAttributes(html)
+    def __parse_html(self, html):
+        return ParseHtmlForUrlsInATagsHrefAttributes(html)
 
 
 if __name__ == '__main__':
