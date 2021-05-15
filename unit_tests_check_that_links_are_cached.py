@@ -1,5 +1,5 @@
 import unittest
-from check_that_links_are_cached import ParseHtmlForUrlsInATagsHrefAttributes, HttpUtil
+from check_that_links_are_cached import ParseHtmlForUrlsInATagsHrefAttributes, HttpUtil, ParseValuesOrReturnDefaultValues
 from unittest.mock import MagicMock
 
 
@@ -12,13 +12,13 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         self.assertEqual(exepected, actual)
 
     def test_some_result(self):
-        html = '<html><head></head><body><a href="https://www.plweb.se/"> </body></html>'
+        html = '<html><head></head><body><a href="https://www.plweb.se/"></body></html>'
         exepected = ['https://www.plweb.se/']
         actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
 
     def test_no_ancor_result(self):
-        html = '<html><head></head><body><a href="https://www.plweb.se/"><a href="#test"> </body></html>'
+        html = '<html><head></head><body><a href="https://www.plweb.se/"><a href="#test"></body></html>'
         exepected = ['https://www.plweb.se/']
         actual = self.__parse_html(html).getParsedUrls()
         self.assertEqual(exepected, actual)
@@ -54,6 +54,71 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         exepected = "test\t200\tmax-age=2592000"
         actual = HttpUtil.get_headers_for_url("test", http_response, ['via'])
         self.assertEqual(exepected, actual)
+
+    def test_parse_values_or_return_default_values_bare_minimum(self):
+        expected_script_name = 'scriptname'
+        expected_url = None
+        expected_http_headers = ['via']
+        expected_times = 1
+        expected_parse_html = True
+        args = [expected_script_name]
+        values = ParseValuesOrReturnDefaultValues(args, ['via'], 1, True)
+        self.assertEqual(expected_script_name, values.getScriptName())
+        self.assertEqual(expected_url, values.getUrl())
+        self.assertEqual(expected_http_headers, values.gethttpHeaders())
+        self.assertEqual(expected_times, len(values.getTimes()))
+        self.assertEqual(expected_parse_html, values.getParseHtml())
+
+    def test_parse_values_or_return_default_values_sort_names(self):
+        expected_script_name = 'scriptname'
+        expected_url = 'https://plweb.se/'
+        expected_times = 3
+        input_http_headers = 'max-age, private, must-revalidate'
+        expected_http_headers = ['max-age', 'private', 'must-revalidate']
+        input_parse_html = 'false'
+        expected_parse_html = False
+        args = [expected_script_name, '-u', expected_url, '-t', expected_times,
+                '-h', input_http_headers, '-p', input_parse_html]
+        values = ParseValuesOrReturnDefaultValues(args, [], 1, True)
+        self.assertEqual(expected_script_name, values.getScriptName())
+        self.assertEqual(expected_url, values.getUrl())
+        self.assertEqual(expected_times, len(values.getTimes()))
+        self.assertEqual(expected_http_headers, values.gethttpHeaders())
+        self.assertEqual(expected_parse_html, values.getParseHtml())
+
+    def test_parse_values_or_return_default_values_long_names(self):
+        expected_script_name = 'scriptname'
+        expected_url = 'https://plweb.se/'
+        expected_times = 3
+        input_http_headers = 'max-age, private, must-revalidate'
+        expected_http_headers = ['max-age', 'private', 'must-revalidate']
+        input_parse_html = 'false'
+        expected_parse_html = False
+        args = [expected_script_name, '--url='+expected_url, '--times='+str(expected_times),
+                '--http-headers=' + input_http_headers, '--parse-html='+input_parse_html]
+        values = ParseValuesOrReturnDefaultValues(args, [], 1, True)
+        self.assertEqual(expected_script_name, values.getScriptName())
+        self.assertEqual(expected_url, values.getUrl())
+        self.assertEqual(expected_times, len(values.getTimes()))
+        self.assertEqual(expected_http_headers, values.gethttpHeaders())
+        self.assertEqual(expected_parse_html, values.getParseHtml())
+
+    def test_parse_values_or_return_default_values_long_names(self):
+        expected_script_name = 'scriptname'
+        expected_url = 'https://plweb.se/'
+        expected_times = 3
+        input_http_headers = 'max-age, private, must-revalidate'
+        expected_http_headers = ['max-age', 'private', 'must-revalidate']
+        input_parse_html = 'false'
+        expected_parse_html = False
+        args = [expected_script_name, '--url='+expected_url, '--times='+str(expected_times),
+                '--http-headers=' + input_http_headers, '--parse-html='+input_parse_html]
+        values = ParseValuesOrReturnDefaultValues(args, [], 1, True)
+        self.assertEqual(expected_script_name, values.getScriptName())
+        self.assertEqual(expected_url, values.getUrl())
+        self.assertEqual(expected_times, len(values.getTimes()))
+        self.assertEqual(expected_http_headers, values.gethttpHeaders())
+        self.assertEqual(expected_parse_html, values.getParseHtml())
 
     def __parse_html(self, html):
         return ParseHtmlForUrlsInATagsHrefAttributes(html)

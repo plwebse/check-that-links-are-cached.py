@@ -15,13 +15,13 @@ python check-that-links-are-cached.py -u https://github.com/plwebse/
     https://education.github.com    200     max-age=0, private, must-revalidate
     https://github.com/plwebse?tab=stars    200     max-age=0, private, must-revalidate
 
-## Options
+## Options 
 
     -u http://url no defualt value
     -t nr of times to check each url (default value 1)
     -h list of headers to look for default values (['cache-control', 'via', 'x-cache'])
     -p true or false (defualt value true)
-    or
+    
     --url= http://url no defualt value
     --times= nr of times to check each url (default value 1)
     --http-headers= list of headers to look for default values ('cache-control', 'via', 'x-cache')

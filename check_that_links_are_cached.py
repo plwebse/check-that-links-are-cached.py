@@ -45,7 +45,12 @@ class HttpUtil:
     def get_html_from(http_response):
         if http_response is None:
             return ""
-        return http_response.read()
+        try:
+            return http_response.read()
+        except Exception:
+            return ""
+        except KeyboardInterrupt:
+            exit_program()
 
     @staticmethod
     def get_http_response_from(url):
@@ -55,33 +60,36 @@ class HttpUtil:
         except urllib.error.HTTPError as e:
             # "e" can be treated as a http.client.HTTPResponse object
             return e
-        except Exception as e:
+        except Exception:
             return None
+        except KeyboardInterrupt:
+            exit_program()
 
 
 class ParseValuesOrReturnDefaultValues:
-    def __init__(self, defaultHttpHeaders, defaultTimes, defaultParseHtml):
+    def __init__(self, argv, defaultHttpHeaders, defaultTimes, defaultParseHtml):
+        self.argv = argv
+        self.scriptName = self.argv[0]
         self.url = None
         self.httpHeaders = defaultHttpHeaders
         self.times = range(defaultTimes)
         self.parseHtml = defaultParseHtml
 
-        argv = sys.argv[1:]
-
         try:
             opts, _args = getopt.getopt(
-                argv, "u:t:h:p:", ['url=', 'times=', 'http-headers=', 'parse-html='])
+                self.argv[1:], "u:t:h:p:", ['url=', 'times=', 'http-headers=', 'parse-html='])
         except Exception as e:
-            print("An error occured {0}".format(str(e)))            
-        for opt, arg in opts:
+            print("An error occured {0}".format(str(e)))
+            return
+        for opt, arg_value in opts:
             if opt in ('-u', '--url'):
-                self.url = arg
+                self.url = arg_value
             elif opt in ('-t', '--times'):
-                self.times = range(int(arg))
+                self.times = range(int(arg_value))
             elif opt in ('-h', '--http-headers'):
-                self.httpHeaders = [x.strip() for x in arg.split(',')]
+                self.httpHeaders = [v.strip() for v in arg_value.split(',')]
             elif opt in ('-p', '--parse-html'):
-                self.parseHtml = self.__str2bool(arg)        
+                self.parseHtml = self.__str2bool(arg_value)
 
     def getUrl(self):
         return self.url
@@ -101,18 +109,28 @@ class ParseValuesOrReturnDefaultValues:
     def getParseHtml(self):
         return self.parseHtml
 
+    def getScriptName(self):
+        return self.scriptName
+
     def __str2bool(self, v):
         return str(v).lower() in ("yes", "true", "1", "y")
 
 
-def main():
-    scriptName = sys.argv[0]
+def exit_program():
+    sys.exit(0)
+
+
+def main():    
     values = ParseValuesOrReturnDefaultValues(
-        ["cache-control", "via", "x-cache"], 1, True)
+        sys.argv,
+        ["cache-control", "via", "x-cache"],
+        1,
+        True
+    )
 
     if(values.getUrl() is None):
         print(
-            "Usage python {0} -u https://github.com/plwebse/".format(scriptName))
+            "Usage python {0} -u https://github.com/plwebse/".format(values.getScriptName()))
         return
 
     print("Checking headers {0} for all urls in html @ url:{1} {2} time(s) parsing href values {3}".format(
@@ -134,11 +152,13 @@ def main():
         tableHeader += '\t' + header
 
     print(tableHeader)
-
-    for url in urls:
-        for _time in values.getTimes():
-            print(HttpUtil.get_headers_for_url(
-                url, HttpUtil.get_http_response_from(url), values.gethttpHeaders()))
+    try:
+        for url in urls:
+            for _time in values.getTimes():
+                print(HttpUtil.get_headers_for_url(
+                    url, HttpUtil.get_http_response_from(url), values.gethttpHeaders()))
+    except KeyboardInterrupt:
+        exit_program()
 
 
 if __name__ == "__main__":
