@@ -1,5 +1,5 @@
 import unittest
-from check_that_links_are_cached import ParseHtmlForUrlsInATagsHrefAttributes, HttpUtil, ParseInputValuesOrReturnDefaultValues
+from check_that_links_are_cached import ParseHtmlForUrlsInATagsHrefAttributes, HttpUtil, ParseCommandlineOptionsOrReturnDefaults
 from unittest.mock import MagicMock
 
 
@@ -31,8 +31,8 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
 
     def test_http_util_get_no_headers_for_url(self):
         http_response = None
-        exepected = "test\t0"
-        actual = HttpUtil.get_headers_for_url("test", http_response, ['via'])
+        exepected = {'status': -1, 'headers': []}
+        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_http_util_get_other_headers_for_url(self):
@@ -41,8 +41,8 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['cache-control'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = "test\t200"
-        actual = HttpUtil.get_headers_for_url("test", http_response, ['via'])
+        exepected = {'status': 200, 'headers': []}
+        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_http_util_get_matching_headers_for_url(self):
@@ -51,8 +51,8 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['via'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = "test\t200\tmax-age=2592000"
-        actual = HttpUtil.get_headers_for_url("test", http_response, ['via'])
+        exepected = {'status': 200, 'headers': ['max-age=2592000']}
+        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_parse_values_or_return_default_values_bare_minimum(self):
@@ -62,7 +62,8 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         expected_times = 1
         expected_parse_html = True
         args = [expected_script_name]
-        values = ParseInputValuesOrReturnDefaultValues(args, ['via'], 1, True)
+        values = ParseCommandlineOptionsOrReturnDefaults(
+            args, ['via'], 1, True)
         self.assertEqual(expected_script_name, values.get_script_name())
         self.assertEqual(expected_url, values.get_url())
         self.assertEqual(expected_http_headers, values.get_http_headers())
@@ -79,7 +80,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         expected_parse_html = False
         args = [expected_script_name, '-u', expected_url, '-t', expected_times,
                 '-h', input_http_headers, '-p', input_parse_html]
-        values = ParseInputValuesOrReturnDefaultValues(args, [], 1, True)
+        values = ParseCommandlineOptionsOrReturnDefaults(args, [], 1, True)
         self.assertEqual(expected_script_name, values.get_script_name())
         self.assertEqual(expected_url, values.get_url())
         self.assertEqual(expected_times, len(values.get_times()))
@@ -96,7 +97,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         expected_parse_html = False
         args = [expected_script_name, '--url='+expected_url, '--times='+str(expected_times),
                 '--http-headers=' + input_http_headers, '--parse-html='+input_parse_html]
-        values = ParseInputValuesOrReturnDefaultValues(args, [], 1, True)
+        values = ParseCommandlineOptionsOrReturnDefaults(args, [], 1, True)
         self.assertEqual(expected_script_name, values.get_script_name())
         self.assertEqual(expected_url, values.get_url())
         self.assertEqual(expected_times, len(values.get_times()))
@@ -113,7 +114,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         expected_parse_html = False
         args = [expected_script_name, '--url='+expected_url, '--times='+str(expected_times),
                 '--http-headers=' + input_http_headers, '--parse-html='+input_parse_html]
-        values = ParseInputValuesOrReturnDefaultValues(args, [], 1, True)
+        values = ParseCommandlineOptionsOrReturnDefaults(args, [], 1, True)
         self.assertEqual(expected_script_name, values.get_script_name())
         self.assertEqual(expected_url, values.get_url())
         self.assertEqual(expected_times, len(values.get_times()))
