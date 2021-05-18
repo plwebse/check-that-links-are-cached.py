@@ -1,6 +1,5 @@
 import sys
 import getopt
-from unittest import result
 import urllib.request
 from bs4 import BeautifulSoup
 
@@ -24,7 +23,7 @@ class ParseHtmlForUrlsInATagsHrefAttributes:
         return self.urls
 
 
-class HttpUtil:
+class Util:
 
     @staticmethod
     def intersection(dict, list):
@@ -36,34 +35,42 @@ class HttpUtil:
         return intersection
 
     @staticmethod
-    def get_list_values(dict, keys):
-        list = []
-        for key in keys:
-            list.append(dict[key])
-        return list
+    def get_list_of_values(dict, keys):
+        return [dict[key] for key in keys]
+
+    @staticmethod
+    def exit_program():
+        sys.exit(0)
+
+    @staticmethod
+    def str_to_bool(v):
+        return str(v).lower() in ('yes', 'true', '1', 'y')
+
+
+class HttpUtil:
 
     @staticmethod
     def get_headers_for_url(http_response, http_headers):
-        output = {'headers': [], 'status': -1}
+        output = {'httpHeaders': [], 'httpStatusCode': -1}
         if http_response is not None:
             headers_dict = http_response.headers
-            intersection_keys = HttpUtil.intersection(
+            intersection_keys = Util.intersection(
                 headers_dict, http_headers)
-            output['status'] = http_response.status
-            output['headers'] = HttpUtil.get_list_values(
+            output['httpStatusCode'] = http_response.status
+            output['httpHeaders'] = Util.get_list_of_values(
                 headers_dict, intersection_keys)
         return output
 
     @staticmethod
     def get_html_from(http_response):
-        res = ""
+        res = ''
         if http_response is not None:
             try:
                 res = http_response.read()
             except Exception:
-                res = ""
+                res = ''
             except KeyboardInterrupt:
-                exit_program()
+                Util.exit_program()
         return res
 
     @staticmethod
@@ -72,12 +79,12 @@ class HttpUtil:
             http_response = urllib.request.urlopen(url)
             return http_response
         except urllib.error.HTTPError as e:
-            # "e" can be treated as a http.client.HTTPResponse object
+            # e can be treated as a http.client.HTTPResponse object
             return e
         except Exception:
             return None
         except KeyboardInterrupt:
-            exit_program()
+            Util.exit_program()
 
 
 class ParseCommandlineOptionsOrReturnDefaults:
@@ -92,11 +99,11 @@ class ParseCommandlineOptionsOrReturnDefaults:
         try:
             opts, _args = getopt.getopt(
                 self.argv[1:],
-                "u:t:h:p:",
+                'u:t:h:p:',
                 ['url=', 'times=', 'http-headers=', 'parse-html=']
             )
         except Exception as e:
-            print("An error occured {0}".format(str(e)))
+            print('An error occured {0}'.format(str(e)))
             return
         for opt, arg_value in opts:
             if opt in ('-u', '--url'):
@@ -106,7 +113,7 @@ class ParseCommandlineOptionsOrReturnDefaults:
             elif opt in ('-h', '--http-headers'):
                 self.http_headers = [v.strip() for v in arg_value.split(',')]
             elif opt in ('-p', '--parse-html'):
-                self.parse_html = self.__str2bool(arg_value)
+                self.parse_html = Util.str_to_bool(arg_value)
 
     def get_url(self):
         return self.url
@@ -129,38 +136,29 @@ class ParseCommandlineOptionsOrReturnDefaults:
     def get_script_name(self):
         return self.script_name
 
-    def __str2bool(self, v):
-        return str(v).lower() in ("yes", "true", "1", "y")
-
-
-def exit_program():
-    sys.exit(0)
-
 
 def print_response(url, count, status_code_and_list_of_headers):
-    status = status_code_and_list_of_headers['status']
-    list_of_headers = status_code_and_list_of_headers['headers']
-    str_of_headers = ""
-    for header in list_of_headers:
-        str_of_headers += header + "\t"
-    print("{0}\t{1}\t{2}\t{3}\t".format(
+    status = status_code_and_list_of_headers['httpStatusCode']
+    list_of_headers = status_code_and_list_of_headers['httpHeaders']
+    str_of_headers = '\t'.join(map(str, list_of_headers))
+    print('{0}\t{1}\t{2}\t{3}\t'.format(
         url, count, str(status), str_of_headers))
 
 
 def main():
     values = ParseCommandlineOptionsOrReturnDefaults(
         sys.argv,
-        ["cache-control", "via", "x-cache"],
+        ['cache-control', 'via', 'x-cache'],
         1,
         True
     )
 
     if(values.get_url() is None):
         print(
-            "Usage python {0} -u https://github.com/plwebse/".format(values.get_script_name()))
+            'Usage python {0} -u https://github.com/plwebse/'.format(values.get_script_name()))
         return
 
-    print("Checking headers {0} for all urls in html @ url:{1} {2} time(s) parsing href values {3}".format(
+    print('Checking headers {0} for all urls in html @ url:{1} {2} time(s) parsing href values {3}'.format(
         values.get_http_headers_str(),
         values.get_url(),
         values.get_times_str(),
@@ -175,8 +173,8 @@ def main():
         urls = [values.get_url()]
 
     print_response('url', 'time(s)', {
-                   'status': 'code',
-                   'headers': values.get_http_headers()
+                   'httpStatusCode': 'code',
+                   'httpHeaders': values.get_http_headers()
                    })
 
     try:
@@ -186,8 +184,8 @@ def main():
                     HttpUtil.get_http_response_from(url), values.get_http_headers()))
 
     except KeyboardInterrupt:
-        exit_program()
+        Util.exit_program()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

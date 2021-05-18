@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
 
     def test_empty_result(self):
-        html = "test"
+        html = '<html><head></head><body></body></html>'
         exepected = []
         actual = self.__parse_html(html).get_parsed_urls()
         self.assertEqual(exepected, actual)
@@ -31,7 +31,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
 
     def test_http_util_get_no_headers_for_url(self):
         http_response = None
-        exepected = {'status': -1, 'headers': []}
+        exepected = {'httpStatusCode': -1, 'httpHeaders': []}
         actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
@@ -41,7 +41,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['cache-control'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = {'status': 200, 'headers': []}
+        exepected = {'httpStatusCode': 200, 'httpHeaders': []}
         actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
@@ -51,7 +51,7 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['via'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = {'status': 200, 'headers': ['max-age=2592000']}
+        exepected = {'httpStatusCode': 200, 'httpHeaders': ['max-age=2592000']}
         actual = HttpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
