@@ -10,11 +10,8 @@ class ParseHtmlForUrlsInATagsHrefAttributes:
             self.__parse_all_a_tags_href_attr_values_from(html))
 
     def __parse_all_a_tags_href_attr_values_from(self, html):
-        hrefs = set()
         soup = BeautifulSoup(html, 'html.parser')
-        for link in soup.find_all('a'):
-            hrefs.add(link.get('href'))
-        return hrefs
+        return {link.get('href') for link in soup.find_all('a', href=True)}
 
     def __remove_url_that_dont_start_with_http(self, hrefs):
         return list(filter(lambda href: href.startswith('http'), hrefs))
@@ -49,20 +46,31 @@ class Util:
 
 class HttpUtil:
 
-    @staticmethod
-    def get_headers_for_url(http_response, http_headers):
-        output = {'httpHeaders': [], 'httpStatusCode': -1}
+    def __init__(self, urls):
+        self.urls = urls
+
+    def get_headers_for_urls(self, http_headers, times):
+        for url in self.urls:
+            for time in times:
+                yield (url, self.get_headers_for_url(
+                    self.get_http_response_from(url), http_headers), time+1)
+
+    def get_html_from_urls(self):
+        for url in self.urls:
+            yield (url, self.get_html_from(self.get_http_response_from(url)))
+
+    def get_headers_for_url(self, http_response, http_headers):
         if http_response is not None:
             headers_dict = http_response.headers
             intersection_keys = Util.intersection(
                 headers_dict, http_headers)
-            output['httpStatusCode'] = http_response.status
-            output['httpHeaders'] = Util.get_list_of_values(
-                headers_dict, intersection_keys)
-        return output
+            return (
+                Util.get_list_of_values(headers_dict, intersection_keys),
+                http_response.status
+            )
+        return ([], -1)
 
-    @staticmethod
-    def get_html_from(http_response):
+    def get_html_from(self, http_response):
         res = ''
         if http_response is not None:
             try:
@@ -73,8 +81,7 @@ class HttpUtil:
                 Util.exit_program()
         return res
 
-    @staticmethod
-    def get_http_response_from(url):
+    def get_http_response_from(self, url):
         try:
             http_response = urllib.request.urlopen(url)
             return http_response
@@ -138,11 +145,21 @@ class ParseCommandlineOptionsOrReturnDefaults:
 
 
 def print_response(url, count, status_code_and_list_of_headers):
-    status = status_code_and_list_of_headers['httpStatusCode']
-    list_of_headers = status_code_and_list_of_headers['httpHeaders']
+    list_of_headers, status = status_code_and_list_of_headers
     str_of_headers = '\t'.join(map(str, list_of_headers))
     print('{0}\t{1}\t{2}\t{3}\t'.format(
         url, count, str(status), str_of_headers))
+
+
+def get_urls_to_test(parse_html, url):
+    if parse_html:
+        urls = []
+        for (url, html) in HttpUtil([url]).get_html_from_urls():
+            urls.extend(ParseHtmlForUrlsInATagsHrefAttributes(
+                html).get_parsed_urls())
+        return urls
+    else:
+        return [url]
 
 
 def main():
@@ -165,24 +182,13 @@ def main():
         values.get_parse_html())
     )
 
-    if values.get_parse_html():
-        html = HttpUtil.get_html_from(
-            HttpUtil.get_http_response_from(values.get_url()))
-        urls = ParseHtmlForUrlsInATagsHrefAttributes(html).get_parsed_urls()
-    else:
-        urls = [values.get_url()]
+    print_response('url', 'time(s)', (values.get_http_headers(), 'code'))
 
-    print_response('url', 'time(s)', {
-                   'httpStatusCode': 'code',
-                   'httpHeaders': values.get_http_headers()
-                   })
+    urls = get_urls_to_test(values.get_parse_html(), values.get_url())
 
     try:
-        for url in urls:
-            for time in values.get_times():
-                print_response(url, str(time+1), HttpUtil.get_headers_for_url(
-                    HttpUtil.get_http_response_from(url), values.get_http_headers()))
-
+        for (url, headers, times) in HttpUtil(urls).get_headers_for_urls(values.get_http_headers(), values.get_times()):
+            print_response(url, str(times), headers)
     except KeyboardInterrupt:
         Util.exit_program()
 

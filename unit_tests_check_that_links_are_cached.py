@@ -31,8 +31,9 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
 
     def test_http_util_get_no_headers_for_url(self):
         http_response = None
-        exepected = {'httpStatusCode': -1, 'httpHeaders': []}
-        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
+        exepected = ([], -1)
+        httpUtil = HttpUtil(['test']) 
+        actual = httpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_http_util_get_other_headers_for_url(self):
@@ -41,8 +42,9 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['cache-control'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = {'httpStatusCode': 200, 'httpHeaders': []}
-        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
+        exepected = ([], 200)
+        httpUtil = HttpUtil(['test']) 
+        actual = httpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_http_util_get_matching_headers_for_url(self):
@@ -51,8 +53,9 @@ class TestParseHtmlForUrlsInATagsHrefAttributes(unittest.TestCase):
         headers['via'] = 'max-age=2592000'
         http_response.headers = headers
         http_response.status = 200
-        exepected = {'httpStatusCode': 200, 'httpHeaders': ['max-age=2592000']}
-        actual = HttpUtil.get_headers_for_url(http_response, ['via'])
+        exepected = (['max-age=2592000'], 200)
+        httpUtil = HttpUtil(['test']) 
+        actual = httpUtil.get_headers_for_url(http_response, ['via'])
         self.assertEqual(exepected, actual)
 
     def test_parse_values_or_return_default_values_bare_minimum(self):
