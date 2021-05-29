@@ -42,6 +42,10 @@ class Util:
     @staticmethod
     def str_to_bool(v):
         return str(v).lower() in ('yes', 'true', '1', 'y')
+    
+    @staticmethod
+    def list_of_strip_strings(list_of_strings):
+        return [v.strip() for v in list_of_strings.split(',')]
 
 
 class HttpUtil:
@@ -118,7 +122,7 @@ class ParseCommandlineOptionsOrReturnDefaults:
             elif opt in ('-t', '--times'):
                 self.times = range(int(arg_value))
             elif opt in ('-h', '--http-headers'):
-                self.http_headers = [v.strip() for v in arg_value.split(',')]
+                self.http_headers = Util.list_of_strip_strings(arg_value)
             elif opt in ('-p', '--parse-html'):
                 self.parse_html = Util.str_to_bool(arg_value)
 
